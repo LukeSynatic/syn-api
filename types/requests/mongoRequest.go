@@ -1,9 +1,6 @@
 package requests
 
-import (
-	"encoding/json"
-	"reflect"
-)
+import "go.mongodb.org/mongo-driver/mongo/options"
 
 type MongoReq struct {
 	DataSource string `json:"dataSource"`
@@ -11,22 +8,52 @@ type MongoReq struct {
 	Collection string `json:"collection"`
 }
 
-func Opts(reqBody []byte, optionsType reflect.Type) (interface{}, error) {
-	options := reflect.New(optionsType).Interface()
-
-	if err := json.Unmarshal(reqBody, &options); err != nil {
-		return nil, err
-	}
-
-	return options, nil
+type Find struct {
+	MongoReq
+	options.FindOptions
+	Filter interface{} `json:"filter"`
 }
 
-func Req(reqBody []byte, optionsType reflect.Type) (interface{}, error) {
-	req := reflect.New(optionsType).Interface()
+type FindOne struct {
+	MongoReq
+	options.FindOneOptions
+	Filter interface{} `json:"filter"`
+}
 
-	if err := json.Unmarshal(reqBody, &req); err != nil {
-		return nil, err
-	}
+type InsertOne struct {
+	MongoReq
+	options.InsertOneOptions
+	Document interface{} `json:"document"`
+}
 
-	return req, nil
+type InsertMany struct {
+	MongoReq
+	options.InsertManyOptions
+	Documents []interface{} `json:"documents"`
+}
+
+type Update struct {
+	MongoReq
+	options.UpdateOptions
+	Filter   interface{} `json:"filter"`
+	Document interface{} `json:"document"`
+}
+
+type Delete struct {
+	MongoReq
+	options.DeleteOptions
+	Filter interface{} `json:"filter"`
+}
+
+type Replace struct {
+	MongoReq
+	options.ReplaceOptions
+	Filter   interface{} `json:"filter"`
+	Document interface{} `json:"document"`
+}
+
+type Aggregate struct {
+	MongoReq
+	options.AggregateOptions
+	Pipeline interface{} `json:"pipeline"`
 }
