@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -120,9 +121,24 @@ func Collection(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func (c *Context) SingleRes(res interface{}, err *error) error {
+func (c *Context) SimpleRes(res interface{}, err *error) error {
 	if *err != nil {
 		return c.Status(500).JSON(err)
+	}
+
+	return c.Status(200).JSON(res)
+}
+
+func (c *Context) SingleRes(bytes []byte, err *error) error {
+	if *err != nil {
+		return c.Status(500).JSON(err)
+	}
+
+	res := map[string]interface{}{}
+	bsonErr := bson.Unmarshal(bytes, res)
+
+	if bsonErr != nil {
+		return c.Status(500).JSON(bsonErr)
 	}
 
 	return c.Status(200).JSON(res)

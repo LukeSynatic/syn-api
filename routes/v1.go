@@ -71,16 +71,9 @@ func findOne(ctx *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	fmt.Printf("%v", req.Filter)
-	fmt.Printf("%v", req.FindOneOptions)
+	bytes, err := collection.FindOne(context.TODO(), req.Filter, &req.FindOneOptions).DecodeBytes()
 
-	var res map[string]interface{}
-	err := collection.FindOne(context.TODO(), req.Filter, &req.FindOneOptions).Decode(res)
-	if err != nil {
-		return c.Status(500).JSON(err)
-	}
-
-	return c.Status(200).JSON(res)
+	return c.SingleRes(bytes, &err)
 }
 
 func insertOne(ctx *fiber.Ctx) error {
@@ -94,7 +87,7 @@ func insertOne(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.InsertOne(context.TODO(), req.Document, &req.InsertOneOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func insertMany(ctx *fiber.Ctx) error {
@@ -107,7 +100,7 @@ func insertMany(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.InsertMany(context.TODO(), req.Documents, &req.InsertManyOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func updateOne(ctx *fiber.Ctx) error {
@@ -120,7 +113,7 @@ func updateOne(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.UpdateOne(context.TODO(), req.Filter, req.Document, &req.UpdateOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func updateMany(ctx *fiber.Ctx) error {
@@ -133,7 +126,7 @@ func updateMany(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.UpdateMany(context.TODO(), req.Filter, req.Document, &req.UpdateOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func replaceOne(ctx *fiber.Ctx) error {
@@ -146,7 +139,7 @@ func replaceOne(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.ReplaceOne(context.TODO(), req.Filter, req.Document, &req.ReplaceOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func deleteOne(ctx *fiber.Ctx) error {
@@ -159,7 +152,7 @@ func deleteOne(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.DeleteOne(context.TODO(), req.Filter, &req.DeleteOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
 
 func aggregate(ctx *fiber.Ctx) error {
@@ -172,5 +165,5 @@ func aggregate(ctx *fiber.Ctx) error {
 	}
 
 	res, err := collection.Aggregate(context.TODO(), req.Pipeline, &req.AggregateOptions)
-	return c.SingleRes(res, &err)
+	return c.SimpleRes(res, &err)
 }
