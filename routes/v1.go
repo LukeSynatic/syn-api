@@ -2,11 +2,11 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"syn-api/middleware"
 	"syn-api/types/requests"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -15,6 +15,8 @@ func BindV1(app *fiber.App) {
 	v1 := app.Group("/v1")
 
 	// Bind pre-process middleware
+	v1.Use(middleware.EJSON)
+	v1.Use(middleware.AcceptsJSON)
 	v1.Use(middleware.Collection)
 
 	// Bind routes
@@ -49,16 +51,17 @@ func find(ctx *fiber.Ctx) error {
 func findStream(ctx *fiber.Ctx) error {
 	return fiber.ErrNotImplemented
 
-	// c := &middleware.Context{Ctx: ctx}
-	// collection := c.Context().UserValue("collection").(*mongo.Collection)
+	/*
+		c := &middleware.Context{Ctx: ctx}
+		collection := c.Context().UserValue("collection").(*mongo.Collection)
 
-	// req := new(requests.Find)
-	// if err := c.BodyParser(req); err != nil {
-	// 	return fiber.ErrBadRequest
-	// }
+		req := new(requests.Find)
+		if err := c.BodyParser(req); err != nil {
+			return fiber.ErrBadRequest
+		}
 
-	// cursor, err := collection.Find(context.TODO(), req.Filter, &req.FindOptions)
-	// return c.StreamRes(cursor, &err)
+		cursor, err := collection.Find(context.TODO(), req.Filter, &req.FindOptions)
+		return c.StreamRes(cursor, &err)*/
 }
 
 func findOne(ctx *fiber.Ctx) error {
@@ -73,7 +76,17 @@ func findOne(ctx *fiber.Ctx) error {
 
 	bytes, err := collection.FindOne(context.TODO(), req.Filter, &req.FindOneOptions).DecodeBytes()
 
-	return c.SingleRes(bytes, &err)
+	if err != nil {
+		return c.Status(500).JSON(err)
+	}
+
+	res := map[string]interface{}{}
+	bsonErr := bson.Unmarshal(bytes, res)
+	if bsonErr != nil {
+		return c.Status(500).JSON(bsonErr)
+	}
+
+	return c.Status(200).JSON(res)
 }
 
 func insertOne(ctx *fiber.Ctx) error {
@@ -82,7 +95,6 @@ func insertOne(ctx *fiber.Ctx) error {
 
 	req := new(requests.InsertOne)
 	if err := c.BodyParser(req); err != nil {
-		fmt.Printf("%v", err)
 		return fiber.ErrBadRequest
 	}
 

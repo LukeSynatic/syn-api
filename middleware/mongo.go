@@ -1,12 +1,10 @@
 package middleware
 
 import (
-	"bufio"
 	"context"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -15,6 +13,7 @@ type Context struct {
 	*fiber.Ctx
 }
 
+/*
 type customStreamWriter struct {
 	*bufio.Writer
 	*mongo.Cursor
@@ -40,35 +39,36 @@ func (c *cursorWriter) Write() error {
 	return nil
 }
 
-// func (w *customStreamWriter) StreamData() {
-// 	log.Printf("CURSOR NIL: %v", w.cursor == nil)
+func (w *customStreamWriter) StreamData() {
+	log.Printf("CURSOR NIL: %v", w.cursor == nil)
 
-// 	defer w.cursor.Close(context.Background())
+	defer w.cursor.Close(context.Background())
 
-// 	// This method will be executed in a separate goroutine
-// 	for w.cursor.Next(context.Background()) {
-// 		document := make(map[string]interface{})
-// 		if err := w.cursor.Decode(&document); err != nil {
-// 			// Handle decoding error
-// 			fmt.Println("Error decoding document:", err.Error())
-// 			break
-// 		}
+	// This method will be executed in a separate goroutine
+	for w.cursor.Next(context.Background()) {
+		document := make(map[string]interface{})
+		if err := w.cursor.Decode(&document); err != nil {
+			// Handle decoding error
+			fmt.Println("Error decoding document:", err.Error())
+			break
+		}
 
-// 		data, err := json.Marshal(document)
-// 		if err != nil {
-// 			// Handle JSON encoding error
-// 			fmt.Println("Error encoding JSON:", err.Error())
-// 			break
-// 		}
+		data, err := json.Marshal(document)
+		if err != nil {
+			// Handle JSON encoding error
+			fmt.Println("Error encoding JSON:", err.Error())
+			break
+		}
 
-// 		// Stream the data
-// 		if _, err := w.c.Write(data); err != nil {
-// 			// Handle any error that may occur during streaming
-// 			fmt.Println("Error streaming data:", err.Error())
-// 			break
-// 		}
-// 	}
-// }
+		// Stream the data
+		if _, err := w.c.Write(data); err != nil {
+			// Handle any error that may occur during streaming
+			fmt.Println("Error streaming data:", err.Error())
+			break
+		}
+	}
+}
+*/
 
 type MongoDB struct {
 	*mongo.Database
@@ -123,22 +123,7 @@ func Collection(c *fiber.Ctx) error {
 
 func (c *Context) SimpleRes(res interface{}, err *error) error {
 	if *err != nil {
-		return c.Status(500).JSON(err)
-	}
-
-	return c.Status(200).JSON(res)
-}
-
-func (c *Context) SingleRes(bytes []byte, err *error) error {
-	if *err != nil {
-		return c.Status(500).JSON(err)
-	}
-
-	res := map[string]interface{}{}
-	bsonErr := bson.Unmarshal(bytes, res)
-
-	if bsonErr != nil {
-		return c.Status(500).JSON(bsonErr)
+		return c.Status(500).JSON(*err)
 	}
 
 	return c.Status(200).JSON(res)
@@ -146,7 +131,7 @@ func (c *Context) SingleRes(bytes []byte, err *error) error {
 
 func (c *Context) BatchRes(cursor *mongo.Cursor, err *error) error {
 	if *err != nil {
-		c.Status(500).JSON(err)
+		c.Status(500).JSON(*err)
 	}
 	defer cursor.Close(context.TODO())
 
@@ -163,9 +148,10 @@ func (c *Context) BatchRes(cursor *mongo.Cursor, err *error) error {
 	return c.Status(200).JSON(res)
 }
 
+/*
 func (c *Context) StreamRes(cursor *mongo.Cursor, err *error) error {
 	if *err != nil {
-		c.Status(500).JSON(err)
+		c.Status(500).JSON(*err)
 	}
 
 	writer := bufio.NewWriter(c.Context().Response.BodyWriter())
@@ -174,4 +160,4 @@ func (c *Context) StreamRes(cursor *mongo.Cursor, err *error) error {
 	cWriter.Write()
 
 	return nil
-}
+}*/
